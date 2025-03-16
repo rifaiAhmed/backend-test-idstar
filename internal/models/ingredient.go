@@ -20,3 +20,17 @@ func (l Ingredient) Validate() error {
 	v := validator.New()
 	return v.Struct(l)
 }
+
+type RecipeFormat struct {
+	ID   uint    `json:"id"`
+	Name string  `json:"name"`
+	SKU  string  `json:"sku"`
+	Cogs float64 `json:"cogs"`
+}
+
+type IngredientCustom struct {
+	ID          int     `json:"id"`
+	InventoryID int     `json:"inventory_id"`
+	Quantity    float64 `json:"quantity"`
+	Item        string  `json:"item"`
+}

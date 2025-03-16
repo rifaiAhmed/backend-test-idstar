@@ -128,3 +128,33 @@ type MetaResponse struct {
 	TotalPage    int64  `json:"totalPages"`
 	TotalData    int64  `json:"totalData"`
 }
+
+type IngredientResponse struct {
+	Message      string `json:"message"`
+	Code         int    `json:"int"`
+	Status       string `json:"status"`
+	ResponseTime string `json:"response_time"`
+}
+
+type ResponseIngredient struct {
+	Meta        IngredientResponse         `json:"meta"`
+	Recipe      models.RecipeFormat        `json:"recipe"`
+	Ingredients *[]models.IngredientCustom `json:"ingredients"`
+}
+
+func APIResponseIngredient(message string, code int, status string, recipe models.RecipeFormat, ingredients *[]models.IngredientCustom) ResponseIngredient {
+	meta := IngredientResponse{
+		Message:      message,
+		Code:         code,
+		Status:       status,
+		ResponseTime: DateToStdNow(),
+	}
+
+	jsonResponse := ResponseIngredient{
+		Meta:        meta,
+		Recipe:      recipe,
+		Ingredients: ingredients,
+	}
+
+	return jsonResponse
+}

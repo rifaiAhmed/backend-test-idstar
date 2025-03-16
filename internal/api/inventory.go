@@ -6,6 +6,7 @@ import (
 	"backend-test/internal/interfaces"
 	"backend-test/internal/models"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -128,4 +129,45 @@ func (api *InventoryAPI) GetAllInv(c *gin.Context) {
 	response := helpers.APIResponseView("Succesfully Get Data!", http.StatusOK, "Succesfully", count, limit, data)
 	response.Meta.CurrentPage = count
 	c.JSON(http.StatusOK, response)
+}
+
+func (api *InventoryAPI) GetTemplate(c *gin.Context) {
+	var (
+		pathFile = "./uploads/movies.xlsx"
+		fileName = "movies.xlsx"
+	)
+
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Disposition", "attachment; filename="+fileName)
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.File(pathFile)
+}
+
+func (api *InventoryAPI) UploadExcel(c *gin.Context) {
+	var (
+		log = helpers.Logger
+	)
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to get file"})
+		return
+	}
+
+	filePath := "./uploads/" + file.Filename
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		return
+	}
+
+	err = api.InventoryService.InsertFromExcel(c, filePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := os.Remove(filePath); err != nil {
+		log.Println("Failed to delete file:", err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "File processed successfully"})
 }

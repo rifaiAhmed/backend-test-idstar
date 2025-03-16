@@ -4,7 +4,12 @@ import (
 	"backend-test/internal/interfaces"
 	"backend-test/internal/models"
 	"context"
+	"fmt"
+	"strconv"
+	"strings"
 
+	"github.com/sirupsen/logrus"
+	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +20,7 @@ type InventoryService struct {
 func (s *InventoryService) InsertInv(ctx context.Context, obj *models.Inventory) (*models.Inventory, error) {
 	data, err := s.InventoryRepo.InsertInv(ctx, obj)
 	if err != nil {
-		return data, err
+		return nil, err
 	}
 	return data, nil
 }
@@ -62,4 +67,57 @@ func (s *InventoryService) CountData(ctx context.Context, objComponent models.Co
 	}
 
 	return count, nil
+}
+
+func (s *InventoryService) InsertFromExcel(ctx context.Context, filePath string) error {
+	f, err := excelize.OpenFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %v", err)
+	}
+	defer f.Close()
+
+	rows, err := f.GetRows("Sheet1")
+	if err != nil {
+		return fmt.Errorf("failed to read sheet: %v", err)
+	}
+
+	var inventories []models.Inventory
+
+	for i, row := range rows {
+		if i == 0 {
+			continue
+		}
+
+		if len(row) < 4 {
+			logrus.Printf("Warning: Row %d has missing columns, skipping...", i+1)
+			continue
+		}
+
+		qty, err := strconv.ParseFloat(strings.TrimSpace(row[1]), 64)
+		if err != nil {
+			logrus.Printf("Warning: Invalid quantity in row %d: %v", i+1, err)
+			continue
+		}
+
+		price, err := strconv.ParseFloat(strings.TrimSpace(row[3]), 64)
+		if err != nil {
+			logrus.Printf("Warning: Invalid price in row %d: %v", i+1, err)
+			continue
+		}
+
+		inventories = append(inventories, models.Inventory{
+			Item:        row[0],
+			Qty:         qty,
+			Uom:         row[2],
+			PricePerQty: price,
+		})
+	}
+	if len(inventories) == 0 {
+		return fmt.Errorf("no valid inventories found in the file")
+	}
+	err = s.InventoryRepo.BatchInsert(ctx, inventories)
+	if err != nil {
+		return err
+	}
+	return nil
 }

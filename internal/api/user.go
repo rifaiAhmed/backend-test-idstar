@@ -5,7 +5,6 @@ import (
 	"backend-test/helpers"
 	"backend-test/internal/interfaces"
 	"backend-test/internal/models"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -47,18 +46,25 @@ func (api *IUserHandler) CekSessionByUUID(c *gin.Context) {
 	var (
 		log = helpers.Logger
 	)
+
 	uuidStr := c.Query("uuid")
-	fmt.Println(uuidStr)
-	parsedUUID, err := uuid.Parse(uuidStr)
-	if err != nil {
-		log.Error("uuid tidak valid: ", err)
-		helpers.SendResponseHTTP(c, http.StatusBadRequest, constants.ErrFailedBadRequest, err.Error())
+	if uuidStr == "" {
+		log.Error("UUID tidak boleh kosong")
+		helpers.SendResponseHTTP(c, http.StatusBadRequest, constants.ErrFailedBadRequest, "UUID tidak boleh kosong")
 		return
 	}
+
+	parsedUUID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		log.Error("UUID tidak valid: ", err)
+		helpers.SendResponseHTTP(c, http.StatusBadRequest, constants.ErrFailedBadRequest, "UUID tidak valid")
+		return
+	}
+
 	data, err := api.UserService.CekSessionByUUID(c, parsedUUID)
 	if err != nil {
-		log.Error("anda tidak memiliki token: ", err)
-		helpers.SendResponseHTTP(c, http.StatusBadRequest, constants.ErrFailedBadRequest, err.Error())
+		log.Error("Anda tidak memiliki token: ", err)
+		helpers.SendResponseHTTP(c, http.StatusBadRequest, constants.ErrFailedBadRequest, "Anda tidak memiliki token")
 		return
 	}
 

@@ -15,3 +15,8 @@ type ComponentServerSide struct {
 	From      string `json:"from"`
 	To        string `json:"to"`
 }
+
+type MultipleIngredients struct {
+	RecipeID int    `json:"id" binding:"required"`
+	Data     string `json:"data" binding:"required"`
+}

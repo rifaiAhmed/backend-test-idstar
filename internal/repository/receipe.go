@@ -1,10 +1,10 @@
 package repository
 
 import (
-	"backend-test/helpers"
 	"backend-test/internal/models"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -31,6 +31,19 @@ func (r *RecipeRepository) InsertRecipe(ctx context.Context, obj *models.Recipe)
 		return nil, err
 	}
 	return obj, nil
+}
+
+func GenerateSKU(tx *gorm.DB) (string, error) {
+	var count int64
+	if err := tx.Model(&models.Recipe{}).Count(&count).Error; err != nil {
+		return "", err
+	}
+	currentDate := time.Now().Format("060102")
+
+	transactionNumber := count + 1
+
+	code := fmt.Sprintf("SKU-%s-%05d", currentDate, transactionNumber)
+	return code, nil
 }
 
 func (r *RecipeRepository) UpdateRecipe(ctx context.Context, obj *models.Recipe) (*models.Recipe, error) {
@@ -73,16 +86,25 @@ func (r *RecipeRepository) FindByID(ctx context.Context, ID int) (*models.Recipe
 	return obj, nil
 }
 
-func (r *RecipeRepository) GetAllRecipe(ctx context.Context, param string) ([]helpers.Recipe, error) {
+func (r *RecipeRepository) GetAllRecipe(ctx context.Context, objComponent models.ComponentServerSide, param string) ([]models.RecipeFormat, error) {
 	var (
 		objs            []models.Recipe
-		objsIncludeCogs []helpers.Recipe
+		objsIncludeCogs []models.RecipeFormat
 	)
-	if err := r.DB.Preload("Ingredients").Find(&objs).Error; err != nil {
-		return nil, err
+	limit := objComponent.Limit
+	isOrder := objComponent.SortBy + ` ` + objComponent.SortType
+	if objComponent.Search != "" {
+		err := r.DB.Where(`lower("name") like '%` + strings.ToLower(objComponent.Search) + `%'`).Order(isOrder).Limit(limit).Offset(objComponent.Skip).Find(&objs).Error
+		if err != nil {
+			return objsIncludeCogs, err
+		}
+	} else {
+		if err := r.DB.Order(isOrder).Limit(limit).Offset(objComponent.Skip).Find(&objs).Error; err != nil {
+			return nil, err
+		}
 	}
 	for _, obj := range objs {
-		var data helpers.Recipe
+		var data models.RecipeFormat
 		data.ID = obj.ID
 		data.Name = obj.Name
 		data.SKU = obj.SKU
@@ -97,17 +119,21 @@ func (r *RecipeRepository) GetAllRecipe(ctx context.Context, param string) ([]he
 	return objsIncludeCogs, nil
 }
 
-func GenerateSKU(tx *gorm.DB) (string, error) {
+func (r *RecipeRepository) CountData(ctx context.Context, objComponent models.ComponentServerSide) (int64, error) {
 	var count int64
-	if err := tx.Model(&models.Recipe{}).Count(&count).Error; err != nil {
-		return "", err
+
+	if objComponent.Search != "" {
+		err := r.DB.Where(`lower("name") like '%` + strings.ToLower(objComponent.Search) + `%'`).Model(&models.Recipe{}).Count(&count).Error
+		if err != nil {
+			return count, err
+		}
+		return count, nil
 	}
-	currentDate := time.Now().Format("060102")
-
-	transactionNumber := count + 1
-
-	code := fmt.Sprintf("SKU-%s-%05d", currentDate, transactionNumber)
-	return code, nil
+	err := r.DB.Model(&models.Recipe{}).Count(&count).Error
+	if err != nil {
+		return count, err
+	}
+	return count, nil
 }
 
 func (r *RecipeRepository) GetCOGS(recipeID int) (*float64, error) {

@@ -52,13 +52,13 @@ func (s *RegisterService) SubmitEmail(ctx context.Context, request models.User) 
 	}
 
 	// send link
-	// var mail models.InternalNotificationRequest
-	// mail.Recipient = objUser.Email
-	// mail.UUID = userSession.Uuid
-	// err = s.SendEmail(ctx, mail)
-	// if err != nil {
-	// 	return nil, token, err
-	// }
+	var mail models.InternalNotificationRequest
+	mail.Recipient = objUser.Email
+	mail.UUID = userSession.Uuid
+	err = s.SendEmail(ctx, mail)
+	if err != nil {
+		return nil, token, err
+	}
 
 	return objUser, token, nil
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
+//go:generate mockgen -source=IUser.go -destination=../mocks/IUser_mock.go -package=mocks
 type IUserRepository interface {
 	InsertNewUser(ctx context.Context, user *models.User) (*models.User, error)
 	FindByEmail(ctx context.Context, email string) (*models.User, error)

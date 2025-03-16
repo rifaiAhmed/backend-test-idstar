@@ -15,7 +15,7 @@ type Dependency struct {
 	UserAPI        interfaces.IUserHandler
 	InventoryAPI   interfaces.IInventoryHandler
 	IngredientAPI  interfaces.IIngredientHandler
-	RicipeAPI      interfaces.IRecipeHandler
+	RecipeAPI      interfaces.IRecipeHandler
 }
 
 func dependencyInject() Dependency {
@@ -82,6 +82,6 @@ func dependencyInject() Dependency {
 		UserAPI:        userAPI,
 		InventoryAPI:   invAPI,
 		IngredientAPI:  ingredientAPI,
-		RicipeAPI:      recipeAPI,
+		RecipeAPI:      recipeAPI,
 	}
 }

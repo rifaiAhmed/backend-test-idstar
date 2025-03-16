@@ -13,10 +13,3 @@ func StringToTime(s string) (time.Time, error) {
 
 	return parsedTime, nil
 }
-
-type Recipe struct {
-	ID   uint    `json:"id"`
-	Name string  `json:"name"`
-	SKU  string  `json:"sku"`
-	Cogs float64 `json:"cogs"`
-}

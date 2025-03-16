@@ -6,6 +6,7 @@ import (
 	"backend-test/internal/interfaces"
 	"backend-test/internal/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -107,4 +108,47 @@ func (api *IngredientAPI) GetAllIngredient(c *gin.Context) {
 		return
 	}
 	helpers.SendResponseHTTP(c, http.StatusOK, constants.SuccessMessage, data)
+}
+
+func (api *IngredientAPI) GetRecipeIncludeIngredients(c *gin.Context) {
+	var (
+		log = helpers.Logger
+	)
+	ID := c.Query("id")
+	IDNum, err := strconv.Atoi(ID)
+	if err != nil {
+		log.Error("failed to get id: ", err)
+		helpers.SendResponseHTTP(c, http.StatusBadRequest, constants.ErrFailedBadRequest, err.Error())
+		return
+	}
+	recipe, ingredients, err := api.SvcIngredient.GetRecipeIncludeIngredients(c, IDNum)
+	if err != nil {
+		log.Error("failed to delete ingredient: ", err)
+		helpers.SendResponseHTTP(c, http.StatusBadRequest, constants.ErrFailedBadRequest, err.Error())
+		return
+	}
+	response := helpers.APIResponseIngredient("Successfully get data", http.StatusOK, constants.SuccessMessage, recipe, ingredients)
+	c.JSON(http.StatusOK, response)
+}
+
+func (api *IngredientAPI) MultipleCreateUpdate(c *gin.Context) {
+	var (
+		log = helpers.Logger
+	)
+
+	req := models.MultipleIngredients{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Error("failed to parse request: ", err)
+		helpers.SendResponseHTTP(c, http.StatusBadRequest, constants.ErrFailedBadRequest, nil)
+		return
+	}
+
+	err := api.SvcIngredient.MultipleCreateUpdate(c, req)
+	if err != nil {
+		log.Error("failed to create ingredient: ", err)
+		helpers.SendResponseHTTP(c, http.StatusBadRequest, constants.ErrFailedBadRequest, err.Error())
+		return
+	}
+
+	helpers.SendResponseHTTP(c, http.StatusOK, constants.SuccessMessage, nil)
 }

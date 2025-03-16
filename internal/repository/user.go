@@ -14,13 +14,10 @@ type UserRepository struct {
 }
 
 func (r *UserRepository) InsertNewUser(ctx context.Context, user *models.User) (*models.User, error) {
-	var (
-		obj *models.User
-	)
-	if err := r.DB.Create(&user).Error; err != nil {
-		return obj, err
+	if err := r.DB.Create(user).Error; err != nil {
+		return nil, err
 	}
-	return obj, nil
+	return user, nil
 }
 
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
