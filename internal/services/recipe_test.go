@@ -36,14 +36,15 @@ func TestReceipeService_InsertRecipe(t *testing.T) {
 			name: "success - insert recipe",
 			args: args{
 				ctx: context.Background(),
-				obj: &models.Recipe{},
+				obj: &models.Recipe{
+					Name: "Nasi Goreng",
+					SKU:  "SKU-250316-00001",
+				},
 			},
 			want: &models.Recipe{
-				ID:        1,
-				Name:      "Nasi Goreng",
-				SKU:       "SKU-250316-00001",
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+				ID:   1,
+				Name: "Nasi Goreng",
+				SKU:  "SKU-250316-00001",
 			},
 			wantErr: false,
 			mockFn: func(args args) {
@@ -51,8 +52,8 @@ func TestReceipeService_InsertRecipe(t *testing.T) {
 					InsertRecipe(args.ctx, args.obj).
 					Return(&models.Recipe{
 						ID:        1,
-						Name:      args.obj.Name,
-						SKU:       args.obj.SKU,
+						Name:      "Nasi Goreng",
+						SKU:       "SKU-250316-00001",
 						CreatedAt: time.Now(),
 						UpdatedAt: time.Now(),
 					}, nil)
