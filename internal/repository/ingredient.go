@@ -63,7 +63,8 @@ func (r *IngredientRepository) CustomIngerdient(ctx context.Context, ID int) ([]
 	i.id,
 	i.inventory_id,
 	i.quantity,
-	i2.item
+	i2.item,
+	i2.uom
 	from ingredients i 
 	left join inventories i2 on i.inventory_id = i2.id
 	where i.recipe_id = ` + fmt.Sprint(ID)

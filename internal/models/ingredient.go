@@ -33,4 +33,5 @@ type IngredientCustom struct {
 	InventoryID int     `json:"inventory_id"`
 	Quantity    float64 `json:"quantity"`
 	Item        string  `json:"item"`
+	Uom         string  `json:"uom"`
 }
